@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1,
+        "nombre": "Camiseta fresca",
+        "categoria": "blusas",
+        "precio": 12.99,
+        "imagen": "images/blusa1.png"
+    },
+     {
+        "id": 2,
+        "nombre": "Pantalon alto",
+        "categoria": "pantalones",
+        "precio": 18.99,
+        "imagen": "images/pantalon1.png"
+    },
+     {
+        "id": 3,
+        "nombre": "Zapatos casuales",
+        "categoria": "zapatos",
+        "precio": 25.00,
+        "imagen": "images/zapatos1.png"
+    }
+    
+]

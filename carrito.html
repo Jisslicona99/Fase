@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mi Carrito</title>
+
+    <!-- Estilos de la plantilla -->
+    <link rel="stylesheet" href="css/animate.min.css" />
+    <link rel="stylesheet" href="css/icomoon.css" />
+    <link rel="stylesheet" href="css/normalize.css" />
+    <link rel="stylesheet" href="css/megamenu.css" />
+    <link rel="stylesheet" href="css/owl.carousel.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/swiper.min.css" />
+    <link rel="stylesheet" href="css/slick.css" />
+    <link rel="stylesheet" href="css/jquery.fancybox.min.css" />
+    <link rel="stylesheet" href="css/jquery-ui.css" />
+
+    <!-- Ícono 
+    <link rel="icon" href="img/" type="image/gif" />
+    -->
+  </head>
+
+  <style>
+      /* Espaciado para tarjetas de productos */
+      .product_box {
+        margin-bottom: 30px;
+      }
+    </style>
+    <link rel="stylesheet" href="css/prueba.css" />
+  </head>
+
+  <body class="main-layout position_head">
+    <!-- Loader -->
+    <div class="loader_bg">
+      <div class="loader"><img src="images/loading.gif" alt="Cargando..." /></div>
+    </div>
+
+    <!-- Header -->
+    <header>
+      <div class="header">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col logo_section">
+              <div class="full">
+                <div class="center-desk">
+                  <div class="logo">
+                    <a href="index.html"><img src="images/logo.png" alt="Logo" /></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9">
+              <nav class="navigation navbar navbar-expand-md navbar-dark">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarsExample04">
+                  <ul class="navbar-nav mr-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="carrito.html">Carrito</a></li>
+                  </ul>
+                </div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <section class="shop section">
+      <div class="container">
+        <h2 class="text-center mb-4">🛒 Productos en tu carrito</h2>
+
+        <div class="row" id="carrito">
+          <!-- Aquí se insertan los productos con JS -->
+        </div>
+
+        <div class="text-center">
+          <button onclick="limpiarCarrito()" class="btn btn-danger mt-3">Limpiar Carrito</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección de sugerencias (Uso de IA) -->
+    <section class="shop section">
+      <div class="container">
+        <h2 class="text-center mb-4">También te podría interesar</h2>
+        <div class="row" id="sugerencias">
+          <!-- Productos sugeridos con usar-ia.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-8 offset-md-2">
+              <ul class="location_icon">
+                <li><a href="#"><i class="fa fa-map-marker"></i></a><br> Location</li>
+                <li><a href="#"><i class="fa fa-phone"></i></a><br> +01 1234567890</li>
+                <li><a href="#"><i class="fa fa-envelope"></i></a><br> demo@gmail.com</li>
+              </ul>
+              
+            </div>
+          </div>
+        </div>
+        <div class="copyright">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-12">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
+    <script src="js/custom.js"></script>
+
+    <!-- Script de funcionalidad del carrito -->
+    <script src="js/carrito.js"></script>
+
+    <!-- Sugerencias con IA -->
+    <script type="module" src="js/usar-ia.js"></script>
+
+    <!-- Función para limpiar el carrito -->
+    <script>
+      function limpiarCarrito() {
+        localStorage.removeItem('carrito');
+        alert("Carrito limpio");
+        location.reload(); // Recarga la página
+      }
+
+       function eliminarDelCarrito(id) {
+        let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        carrito = carrito.filter(prodId => prodId !== id);
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+        location.reload();
+      }
+    </script>
+  </body>
+</html>
