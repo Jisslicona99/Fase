@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
-  <head>
+  <html lang="es">
+    <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Draknor | Inicio</title>
 
-    <!-- Estilos de la plantilla -->
+    <!-- Estilos base -->
     <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
     <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
-    <link rel="icon" href="images/fevicon.png" type="image/gif" />
   </head>
 
   <body class="main-layout">
@@ -25,26 +26,24 @@
     <header>
       <div class="header">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col logo_section">
-              <div class="full">
-                <div class="center-desk">
-                  <div class="logo">
-                    <a href="index.html"><img src="images/logo.png" alt="Draknor" /></a>
-                  </div>
-                </div>
+          <div class="row align-items-center">
+            <div class="col-md-3 logo_section">
+              <div class="logo">
+                <a href="index.html"><img src="images/logo.png" alt="Draknor" /></a>
               </div>
             </div>
-            <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9">
+            <div class="col-md-9">
               <nav class="navigation navbar navbar-expand-md navbar-dark">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04">
                   <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarsExample04">
-                  <ul class="navbar-nav mr-auto">
+                  <ul class="navbar-nav ml-auto">
                     <li class="nav-item active"><a class="nav-link" href="index.html">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="shop.html">Catálogo</a></li>
                     <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrar</a></li>
                   </ul>
                 </div>
               </nav>
@@ -54,18 +53,22 @@
       </div>
     </header>
 
-    <!-- Sección principal de bienvenida -->
+    <!-- Banner de bienvenida -->
     <section class="banner_main">
+      <div class="container text-center">
+        <h1>Bienvenido a <span class="text-success">Draknor</span></h1>
+        <p>Explora nuestro catálogo de moda impulsado con IA</p>
+        <a href="shop.html" class="btn btn-primary">Ver Productos</a>
+        <a href="carrito.html" class="btn btn-outline-light ml-2">Ir al Carrito</a>
+      </div>
+    </section>
+
+    <!-- Carrusel de productos -->
+    <section class="productos_destacados section">
       <div class="container">
-        <div class="row d_flex">
-          <div class="col-md-12 text-center">
-            <div class="text-bg">
-              <h1>Bienvenido a <span class="text-success">Draknor</span></h1>
-              <p>Explora nuestro catálogo de moda con IA</p>
-              <a href="shop.html" class="btn btn-primary">Ver Productos</a>
-              <a href="carrito.html" class="btn btn-outline-light ml-2">Ir al Carrito</a>
-            </div>
-          </div>
+        <h2 class="text-center mb-4">Productos Destacados</h2>
+        <div class="owl-carousel owl-theme" id="carousel-productos">
+          <!-- Aquí se insertan los productos dinámicamente -->
         </div>
       </div>
     </section>
@@ -87,7 +90,7 @@
         <div class="copyright">
           <div class="container">
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-md-12 text-center">
                 <p>© 2025 Draknor. Todos los derechos reservados.</p>
               </div>
             </div>
@@ -96,12 +99,59 @@
       </div>
     </footer>
 
-    <!-- Scripts de la plantilla -->
-    <script src="js/jquery.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery-3.0.0.min.js"></script>
-    <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
-    <script src="js/custom.js"></script>
+    <!-- Scripts base (jQuery primero, luego plugins) -->
+<script src="js/jquery-3.6.0.min.js"></script>
+<script src="js/custom.js"></script>
+
+
+<!-- Owl Carousel desde CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+<!-- Otros scripts -->
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
+
+<!-- Script para cargar productos del catálogo y activar Owl Carousel -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const catalogo = JSON.parse(localStorage.getItem("catalogo")) || [];
+    const carrusel = document.getElementById("carousel-productos");
+
+    catalogo.slice(0, 6).forEach(prod => {
+      const div = document.createElement("div");
+      div.classList.add("item");
+
+      div.innerHTML = `
+        <div class="product-box text-center p-3" style="border:1px solid #ddd;">
+          <img src="${prod.imagen}" alt="${prod.nombre}" style="width:100%; max-height:200px; object-fit:contain;">
+          <h4 class="mt-3">${prod.nombre}</h4>
+          <p class="text-success font-weight-bold">$${prod.precio}</p>
+          <a href="shop.html" class="btn btn-sm btn-primary mt-2">Ver más</a>
+        </div>
+      `;
+      carrusel.appendChild(div);
+    });
+
+    $(".owl-carousel").owlCarousel({
+      loop: true,
+      margin: 15,
+      nav: true,
+      dots: true,
+      responsive: {
+        0: { items: 1 },
+        600: { items: 2 },
+        1000: { items: 3 }
+      }
+    });
+  });
+</script>
+
+<script>
+  // Oculta el loader cuando todo esté cargado
+  $(window).on("load", function () {
+    $(".loader_bg").fadeOut("slow");
+  });
+</script>
+
   </body>
 </html>

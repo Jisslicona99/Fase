@@ -6,30 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mi Carrito</title>
 
-    <!-- Estilos de la plantilla -->
-    <link rel="stylesheet" href="css/animate.min.css" />
-    <link rel="stylesheet" href="css/icomoon.css" />
-    <link rel="stylesheet" href="css/normalize.css" />
-    <link rel="stylesheet" href="css/megamenu.css" />
-    <link rel="stylesheet" href="css/owl.carousel.min.css" />
-    <link rel="stylesheet" href="css/font-awesome.min.css" />
-    <link rel="stylesheet" href="css/swiper.min.css" />
-    <link rel="stylesheet" href="css/slick.css" />
-    <link rel="stylesheet" href="css/jquery.fancybox.min.css" />
-    <link rel="stylesheet" href="css/jquery-ui.css" />
-
-    <!-- Ícono 
-    <link rel="icon" href="img/" type="image/gif" />
-    -->
+        <!-- Estilos de la plantilla -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
   </head>
-
-  <style>
+    <style>
       /* Espaciado para tarjetas de productos */
       .product_box {
         margin-bottom: 30px;
       }
     </style>
-    <link rel="stylesheet" href="css/prueba.css" />
   </head>
 
   <body class="main-layout position_head">
@@ -58,10 +49,12 @@
                   <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarsExample04">
-                  <ul class="navbar-nav mr-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
-                    <li class="nav-item active"><a class="nav-link" href="carrito.html">Carrito</a></li>
+                  <ul class="navbar-nav ml-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+                    <li class="nav-item active"><a class="nav-link" href="shop.html">Catálogo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Registrar</a></li>
                   </ul>
                 </div>
               </nav>
@@ -86,7 +79,7 @@
       </div>
     </section>
 
-    <!-- Sección de sugerencias (Uso de IA) -->
+    <!-- Sección de sugerencias (si usas IA) -->
     <section class="shop section">
       <div class="container">
         <h2 class="text-center mb-4">También te podría interesar</h2>
@@ -107,7 +100,6 @@
                 <li><a href="#"><i class="fa fa-phone"></i></a><br> +01 1234567890</li>
                 <li><a href="#"><i class="fa fa-envelope"></i></a><br> demo@gmail.com</li>
               </ul>
-              
             </div>
           </div>
         </div>
@@ -123,12 +115,12 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-3.6.0.min.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
     <script src="js/custom.js"></script>
+
 
     <!-- Script de funcionalidad del carrito -->
     <script src="js/carrito.js"></script>
@@ -136,7 +128,7 @@
     <!-- Sugerencias con IA -->
     <script type="module" src="js/usar-ia.js"></script>
 
-    <!-- Función para limpiar el carrito -->
+    <!-- Funciones adicionales -->
     <script>
       function limpiarCarrito() {
         localStorage.removeItem('carrito');
@@ -144,12 +136,19 @@
         location.reload(); // Recarga la página
       }
 
-       function eliminarDelCarrito(id) {
+      function eliminarDelCarrito(id) {
         let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
         carrito = carrito.filter(prodId => prodId !== id);
         localStorage.setItem('carrito', JSON.stringify(carrito));
         location.reload();
       }
     </script>
+
+    <script>
+  $(window).on("load", function () {
+    $(".loader_bg").fadeOut("slow");
+  });
+</script>
+
   </body>
 </html>
