@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mi Carrito</title>
 
-        <!-- Estilos de la plantilla -->
+    <!-- Estilos de la plantilla -->
     <link rel="stylesheet" href="css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/responsive.css" />
@@ -14,11 +14,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css" />
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
-  </head>
+
     <style>
       /* Espaciado para tarjetas de productos */
       .product_box {
         margin-bottom: 30px;
+      }
+      .product_img {
+        max-height: 150px;
+        object-fit: contain;
       }
     </style>
   </head>
@@ -49,12 +53,8 @@
                   <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarsExample04">
-                  <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
-                    <li class="nav-item active"><a class="nav-link" href="shop.html">Catálogo</a></li>
-                    <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Registrar</a></li>
+                  <ul class="navbar-nav ml-auto" id="nav-list">
+                    <!-- Nav dinámico -->
                   </ul>
                 </div>
               </nav>
@@ -74,7 +74,7 @@
         </div>
 
         <div class="text-center">
-          <button onclick="limpiarCarrito()" class="btn btn-danger mt-3">Limpiar Carrito</button>
+          <button id="btn-limpiar" class="btn btn-danger mt-3">Limpiar Carrito</button>
         </div>
       </div>
     </section>
@@ -107,6 +107,7 @@
           <div class="container">
             <div class="row">
               <div class="col-md-12">
+                <p class="text-center">© 2025 Draknor. Todos los derechos reservados.</p>
               </div>
             </div>
           </div>
@@ -121,34 +122,172 @@
     <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
     <script src="js/custom.js"></script>
 
-
-    <!-- Script de funcionalidad del carrito -->
-    <script src="js/carrito.js"></script>
-
     <!-- Sugerencias con IA -->
     <script type="module" src="js/usar-ia.js"></script>
 
-    <!-- Funciones adicionales -->
     <script>
-      function limpiarCarrito() {
-        localStorage.removeItem('carrito');
-        alert("Carrito limpio");
-        location.reload(); // Recarga la página
+      $(window).on("load", function () {
+        $(".loader_bg").fadeOut("slow");
+      });
+
+      // Mostrar navbar según usuario y actualizar contador carrito
+      document.addEventListener('DOMContentLoaded', () => {
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        const nav = document.getElementById('nav-list');
+
+        if (usuario) {
+          nav.innerHTML = `
+            <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="shop.html">Catálogo</a></li>
+            <li class="nav-item active"><a class="nav-link" href="carrito.html">Carrito <span id="contador-carrito"></span></a></li>
+            <li class="nav-item"><span class="nav-link">Hola, ${usuario.username}</span></li>
+            <li class="nav-item"><a class="nav-link" href="#" id="logout">Cerrar sesión</a></li>
+          `;
+
+          document.getElementById('logout').addEventListener('click', async e => {
+          e.preventDefault();
+
+          try {
+            // Primero borra el carrito del backend
+            const res = await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
+              method: 'DELETE'
+            });
+
+            if (!res.ok) throw new Error('No se pudo limpiar el carrito en el backend');
+
+            // Luego borra datos del LocalStorage
+            localStorage.removeItem(`carrito_${usuario.username}`);
+            localStorage.removeItem('usuario');
+
+            alert('Sesión cerrada y carrito limpiado.');
+            window.location.href = 'index.html'; // Redirecciona a inicio
+          } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            alert('Hubo un error al cerrar sesión. Inténtalo de nuevo.');
+          }
+        });
+
+
+          cargarCarrito(usuario);
+
+        } else {
+          nav.innerHTML = `
+            <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="shop.html">Catálogo</a></li>
+            <li class="nav-item active"><a class="nav-link" href="carrito.html">Carrito <span id="contador-carrito"></span></a></li>
+            <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="register.html">Registrar</a></li>
+          `;
+
+          cargarCarrito(null);
+        }
+
+        // Botón limpiar carrito
+        document.getElementById('btn-limpiar').addEventListener('click', async () => {
+          const user = JSON.parse(localStorage.getItem('usuario'));
+          if (user) {
+            // Limpiar backend y localStorage usuario
+            await fetch(`http://localhost:3000/api/carrito/${user.id}`, { method: 'DELETE' }).catch(console.error);
+            localStorage.removeItem(`carrito_${user.username}`);
+          } else {
+            // Solo localStorage genérico
+            localStorage.removeItem('carrito');
+          }
+          alert('Carrito limpio');
+          location.reload();
+        });
+      });
+
+      // Carga y renderiza carrito (localStorage) para usuario o anon
+      async function cargarCarrito(usuario) {
+        let carrito = [];
+
+        if (usuario) {
+          carrito = JSON.parse(localStorage.getItem(`carrito_${usuario.username}`)) || [];
+        } else {
+          carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        }
+
+        actualizarContadorCarrito(carrito);
+
+        const contenedor = document.getElementById('carrito');
+        contenedor.innerHTML = '';
+
+        if (carrito.length === 0) {
+          contenedor.innerHTML = '<p class="text-center w-100">Tu carrito está vacío.</p>';
+          return;
+        }
+
+        carrito.forEach((prod, index) => {
+          const col = document.createElement('div');
+          col.className = 'col-md-4 product_box';
+
+          col.innerHTML = `
+          <div class="card h-100">
+            <img src="images/${prod.imagen}" class="card-img-top product_img" alt="${prod.nombre}" />
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">${prod.nombre}</h5>
+              <p class="card-text">Precio: $${prod.precio.toFixed(2)}</p>
+              <p class="card-text">Cantidad: ${prod.cantidad}</p>
+              <button class="btn btn-danger mt-auto btn-eliminar" data-id="${prod.id}">Eliminar</button>
+            </div>
+          </div>
+        `;
+
+
+          contenedor.appendChild(col);
+        });
+
+        // Asociar evento eliminar producto
+        document.querySelectorAll('.btn-eliminar').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            await eliminarDelCarrito(id, usuario);
+          });
+        });
       }
 
-      function eliminarDelCarrito(id) {
-        let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-        carrito = carrito.filter(prodId => prodId !== id);
-        localStorage.setItem('carrito', JSON.stringify(carrito));
-        location.reload();
+      // Actualiza el contador en navbar
+      function actualizarContadorCarrito(carrito) {
+        const contador = document.getElementById('contador-carrito');
+        const total = carrito.reduce((acc, p) => acc + p.cantidad, 0);
+        contador.textContent = total > 0 ? `(${total})` : '';
+      }
+
+      // Eliminar producto de carrito (localStorage + backend si usuario)
+      async function eliminarDelCarrito(id, usuario) {
+        let carrito = [];
+
+        if (usuario) {
+          const key = `carrito_${usuario.username}`;
+          carrito = JSON.parse(localStorage.getItem(key)) || [];
+          carrito = carrito.filter(p => p.id !== id);
+          localStorage.setItem(key, JSON.stringify(carrito));
+          // Actualizar backend enviando carrito filtrado
+          // Alternativa: eliminar solo ese producto, pero backend no define endpoint específico para eso.
+          // Entonces actualizamos todo el carrito en backend (POST para cada producto).
+          // Pero para simplificar, podemos hacer DELETE total y luego POST de cada producto restante.
+          try {
+            await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, { method: 'DELETE' });
+            for (const p of carrito) {
+              await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ producto_id: p.id, cantidad: p.cantidad }),
+              });
+            }
+          } catch (error) {
+            console.error('Error actualizando backend al eliminar producto:', error);
+          }
+
+        } else {
+          carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+          carrito = carrito.filter(p => p.id !== id);
+          localStorage.setItem('carrito', JSON.stringify(carrito));
+        }
+
+        cargarCarrito(usuario);
       }
     </script>
-
-    <script>
-  $(window).on("load", function () {
-    $(".loader_bg").fadeOut("slow");
-  });
-</script>
-
   </body>
 </html>

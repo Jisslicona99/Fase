@@ -1,133 +1,311 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Draknor | Catálogo</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Draknor | Catálogo</title>
 
-    <!-- Estilos -->
-    <link rel="stylesheet" href="css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
-    <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
-  </head>
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+  <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
+  <link
+    rel="stylesheet"
+    href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
+  />
+</head>
 
-  <body class="main-layout">
-    <!-- Loader -->
-    <div class="loader_bg">
-      <div class="loader"><img src="images/loading.gif" alt="Cargando..." /></div>
-    </div>
+<body class="main-layout">
+  <!-- Loader -->
+  <div class="loader_bg">
+    <div class="loader"><img src="images/loading.gif" alt="Cargando..." /></div>
+  </div>
 
-    <!-- Header -->
-    <header>
-      <div class="header">
-        <div class="container-fluid">
-          <div class="row align-items-center">
-            <div class="col-md-3 logo_section">
-              <div class="logo">
-                <a href="index.html"><img src="images/logo.png" alt="Draknor" /></a>
+  <!-- Header -->
+  <header>
+    <div class="header">
+      <div class="container-fluid">
+        <div class="row align-items-center">
+          <div class="col-md-3 logo_section">
+            <div class="logo">
+              <a href="index.html"><img src="images/logo.png" alt="Draknor" /></a>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <nav class="navigation navbar navbar-expand-md navbar-dark">
+              <button
+                class="navbar-toggler"
+                type="button"
+                data-toggle="collapse"
+                data-target="#navbarsExample04"
+              >
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarsExample04">
+                <ul class="navbar-nav ml-auto">
+                  <!-- Contenido dinámico del nav aquí -->
+                </ul>
               </div>
-            </div>
-            <div class="col-md-9">
-              <nav class="navigation navbar navbar-expand-md navbar-dark">
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample04">
-                  <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarsExample04">
-                  <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
-                    <li class="nav-item active"><a class="nav-link" href="shop.html">Catálogo</a></li>
-                    <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Registrar</a></li>
-                  </ul>
-                </div>
-              </nav>
-            </div>
+            </nav>
           </div>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Contenido principal -->
-    <section class="py-5">
+  <!-- Contenido principal -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-4">Catálogo de Productos</h2>
+      <div class="row" id="productos-listado">
+        <!-- Los productos se insertan aquí desde JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer">
       <div class="container">
-        <h2 class="text-center mb-4">Catálogo de Productos</h2>
-        <div class="row" id="productos-listado">
-          <!-- Los productos se insertan aquí desde JS -->
+        <div class="row">
+          <div class="col-md-8 offset-md-2">
+            <ul class="location_icon">
+              <li>
+                <a href="#"><i class="fa fa-map-marker"></i></a><br />
+                Location
+              </li>
+              <li>
+                <a href="#"><i class="fa fa-phone"></i></a><br />
+                +01 1234567890
+              </li>
+              <li>
+                <a href="#"><i class="fa fa-envelope"></i></a><br />
+                contacto@draknor.com
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- Footer -->
-    <footer>
-      <div class="footer">
+      <div class="copyright">
         <div class="container">
           <div class="row">
-            <div class="col-md-8 offset-md-2">
-              <ul class="location_icon">
-                <li><a href="#"><i class="fa fa-map-marker"></i></a><br> Location</li>
-                <li><a href="#"><i class="fa fa-phone"></i></a><br> +01 1234567890</li>
-                <li><a href="#"><i class="fa fa-envelope"></i></a><br> contacto@draknor.com</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="copyright">
-          <div class="container">
-            <div class="row">
-              <div class="col-md-12 text-center">
-                <p>© 2025 Draknor. Todos los derechos reservados.</p>
-              </div>
+            <div class="col-md-12 text-center">
+              <p>© 2025 Draknor. Todos los derechos reservados.</p>
             </div>
           </div>
         </div>
       </div>
-    </footer>
+    </div>
+  </footer>
 
-    <!-- Scripts -->
-    <script src="js/jquery-3.6.0.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
-    <script src="js/custom.js"></script>
+  <!-- Scripts -->
+  <script src="js/jquery-3.6.0.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
 
-    <!-- Loader Script -->
-    <script>
-      $(window).on("load", function () {
-        $(".loader_bg").fadeOut("slow");
-      });
-    </script>
+  <!-- Loader y Navbar dinámico con logout -->
+  <script>
+    $(window).on("load", function () {
+      $(".loader_bg").fadeOut("slow");
+    });
 
-    <!-- Cargar productos -->
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const catalogo = JSON.parse(localStorage.getItem("catalogo")) || [];
-        const contenedor = document.getElementById("productos-listado");
+    document.addEventListener('DOMContentLoaded', () => {
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+      const nav = document.querySelector('.navbar-nav');
 
-        if (catalogo.length === 0) {
-          contenedor.innerHTML = `<div class="col-12 text-center"><p>No hay productos disponibles.</p></div>`;
-          return;
+      if (usuario) {
+        nav.innerHTML = `
+          <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+          <li class="nav-item active"><a class="nav-link" href="shop.html">Catálogo</a></li>
+          <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito <span id="contador-carrito"></span></a></li>
+          <li class="nav-item"><span class="nav-link">Hola, ${usuario.username}</span></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="logout">Cerrar sesión</a></li>
+        `;
+
+        sincronizarCarrito(usuario).then(() => {
+          actualizarContadorCarrito();
+          cargarProductos();
+        });
+
+        document.getElementById('logout').addEventListener('click', async e => {
+          e.preventDefault();
+          await limpiarCarritoBackend(usuario);
+          localStorage.removeItem('usuario');
+          localStorage.removeItem(`carrito_${usuario.username}`);
+          window.location.reload();
+        });
+
+      } else {
+        nav.innerHTML = `
+          <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+          <li class="nav-item active"><a class="nav-link" href="shop.html">Catálogo</a></li>
+          <li class="nav-item"><a class="nav-link" href="carrito.html">Carrito <span id="contador-carrito"></span></a></li>
+          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="register.html">Registrar</a></li>
+        `;
+
+        actualizarContadorCarrito();
+        cargarProductos();
+      }
+    });
+
+    async function sincronizarCarrito(usuario) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/carrito/${usuario.id}`);
+        if (!res.ok) throw new Error('Error al obtener carrito backend');
+        const carritoBackend = await res.json();
+
+        const carritoKey = `carrito_${usuario.username}`;
+        let carritoLocal = JSON.parse(localStorage.getItem(carritoKey)) || [];
+
+        const mapBackend = new Map();
+        carritoBackend.forEach(item => {
+          mapBackend.set(item.producto_id.toString(), item.cantidad);
+        });
+
+        carritoLocal.forEach(item => {
+          const idStr = item.id.toString();
+          if (mapBackend.has(idStr)) {
+            mapBackend.set(idStr, mapBackend.get(idStr) + item.cantidad);
+          } else {
+            mapBackend.set(idStr, item.cantidad);
+          }
+        });
+
+        carritoLocal = [];
+        for (const [producto_id, cantidad] of mapBackend.entries()) {
+          carritoLocal.push({ id: producto_id, nombre: '', precio: 0, imagen: '', cantidad });
+
+          // Actualizar backend con cantidad correcta (upsert)
+          await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ producto_id, cantidad })
+          });
         }
 
-        catalogo.forEach(prod => {
-          const col = document.createElement("div");
-          col.className = "col-md-4 mb-4";
+        localStorage.setItem(carritoKey, JSON.stringify(carritoLocal));
+      } catch (error) {
+        console.error('Error sincronizando carrito:', error);
+      }
+    }
 
-          col.innerHTML = `
-            <div class="card h-100 text-center">
-              <img src="${prod.imagen}" class="card-img-top" alt="${prod.nombre}" style="object-fit:contain; max-height:200px;">
-              <div class="card-body">
-                <h5 class="card-title">${prod.nombre}</h5>
-                <p class="card-text text-success font-weight-bold">$${prod.precio}</p>
-                <button class="btn btn-sm btn-outline-primary">Agregar al carrito</button>
-              </div>
-            </div>
-          `;
+    document.getElementById('logout').addEventListener('click', async e => {
+          e.preventDefault();
 
-          contenedor.appendChild(col);
+          try {
+            // Primero borra el carrito del backend
+            const res = await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
+              method: 'DELETE'
+            });
+
+            if (!res.ok) throw new Error('No se pudo limpiar el carrito en el backend');
+
+            // Luego borra datos del LocalStorage
+            localStorage.removeItem(`carrito_${usuario.username}`);
+            localStorage.removeItem('usuario');
+
+            alert('Sesión cerrada y carrito limpiado.');
+            window.location.href = 'index.html'; // Redirecciona a inicio
+          } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+            alert('Hubo un error al cerrar sesión. Inténtalo de nuevo.');
+          }
         });
+
+    function agregarAlCarrito(e) {
+      const btn = e.target;
+      const id = btn.getAttribute('data-id');
+      const nombre = btn.getAttribute('data-nombre');
+      const precio = parseFloat(btn.getAttribute('data-precio'));
+      const imagen = btn.getAttribute('data-imagen');
+
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+      if (!usuario) {
+        alert('Debes iniciar sesión para agregar productos al carrito');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const carritoKey = `carrito_${usuario.username}`;
+      let carrito = JSON.parse(localStorage.getItem(carritoKey)) || [];
+
+      const productoExistente = carrito.find(item => item.id === id);
+
+      if (productoExistente) {
+        productoExistente.cantidad += 1;
+      } else {
+        carrito.push({ id, nombre, precio, imagen, cantidad: 1 });
+      }
+
+      localStorage.setItem(carritoKey, JSON.stringify(carrito));
+
+      const cantidadActual = productoExistente ? productoExistente.cantidad : 1;
+      fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ producto_id: id, cantidad: cantidadActual })
       });
-    </script>
-  </body>
+
+      actualizarContadorCarrito();
+      alert(`Se agregó "${nombre}" al carrito.`);
+    }
+
+    function actualizarContadorCarrito() {
+      const usuario = JSON.parse(localStorage.getItem('usuario'));
+      const contadorSpan = document.getElementById('contador-carrito');
+
+      if (!usuario) {
+        contadorSpan.textContent = '';
+        return;
+      }
+
+      const carritoKey = `carrito_${usuario.username}`;
+      const carrito = JSON.parse(localStorage.getItem(carritoKey)) || [];
+      const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+
+      contadorSpan.textContent = totalItems > 0 ? `(${totalItems})` : '';
+    }
+
+    function cargarProductos() {
+      fetch('http://localhost:3000/api/catalogo')
+        .then(res => res.json())
+        .then(productos => {
+          const contenedor = document.getElementById('productos-listado');
+          contenedor.innerHTML = '';
+          productos.forEach(p => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 mb-4';
+            col.innerHTML = `
+              <div class="card h-100">
+                <img src="images/${p.imagen}" class="card-img-top" alt="${p.nombre}" />
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">${p.nombre}</h5>
+                  <p class="card-text">$${p.precio.toFixed(2)}</p>
+                  <button 
+                    class="btn btn-primary mt-auto agregar-carrito"
+                    data-id="${p.id}"
+                    data-nombre="${p.nombre}"
+                    data-precio="${p.precio}"
+                    data-imagen="${p.imagen}"
+                  >Agregar al carrito</button>
+                </div>
+              </div>
+            `;
+            contenedor.appendChild(col);
+          });
+
+          document.querySelectorAll('.agregar-carrito').forEach(btn => {
+            btn.addEventListener('click', agregarAlCarrito);
+          });
+        })
+        .catch(err => {
+          console.error('Error cargando productos:', err);
+          const contenedor = document.getElementById('productos-listado');
+          contenedor.innerHTML = '<p>Error cargando productos.</p>';
+        });
+    }
+  </script>
+</body>
 </html>

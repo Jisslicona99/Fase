@@ -1,11 +1,28 @@
-// Inicializamos el carrito desde localStorage
-let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+// Obtener usuario actual
+const usuario = JSON.parse(localStorage.getItem('usuario'));
 
-// Función para agregar productos al carrito
+// Inicializar carrito según usuario o carrito genérico
+let carrito = [];
+
+if (usuario) {
+  carrito = JSON.parse(localStorage.getItem(`carrito_${usuario.username}`)) || [];
+} else {
+  carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+}
+
+// Guardar carrito en el localStorage correcto
+function guardarCarrito() {
+  if (usuario) {
+    localStorage.setItem(`carrito_${usuario.username}`, JSON.stringify(carrito));
+  } else {
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+  }
+}
+
+// Agregar producto al carrito
 function agregarAlCarrito(producto) {
-  // Revisamos si ya existe en el carrito
   let existente = carrito.find(p => p.id === producto.id);
-  
+
   if (existente) {
     existente.cantidad += 1;
   } else {
@@ -13,47 +30,53 @@ function agregarAlCarrito(producto) {
     carrito.push(producto);
   }
 
-  localStorage.setItem('carrito', JSON.stringify(carrito));
+  guardarCarrito();
+  actualizarContadorCarrito();
   alert("Producto agregado al carrito");
 }
 
-// Cargar productos desde catalogo.json y mostrarlos en el HTML
+// Actualizar contador carrito en la UI
+function actualizarContadorCarrito() {
+  const contador = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
+  const contadorElem = document.getElementById("contador-carrito");
+  if (contadorElem) {
+    contadorElem.textContent = contador > 0 ? `(${contador})` : '';
+  }
+}
+
+// Cargar productos desde el catálogo y mostrar en pantalla
 fetch('data/catalogo.json')
   .then(response => {
-    if (!response.ok) {
-      throw new Error('No se pudo cargar el archivo JSON');
-    }
+    if (!response.ok) throw new Error('No se pudo cargar el archivo JSON');
     return response.json();
   })
   .then(productos => {
-    const contenedor = document.getElementById('catalogo');
-
+    const contenedor = document.getElementById('productos-listado');
     productos.forEach(prod => {
       const div = document.createElement('div');
-      div.classList.add('col-md-4');
+      div.classList.add('col-md-4', 'mb-4');
 
       div.innerHTML = `
-        <div class="product-box text-center p-3" style="border:1px solid #ddd; margin-bottom: 30px;">
-          <img src="${prod.imagen}" alt="${prod.nombre}" style="width:100%; max-height:200px; object-fit:contain;">
-          <h4 class="mt-3">${prod.nombre}</h4>
-          <p class="text-success font-weight-bold">$${prod.precio}</p>
-          <button class="btn btn-primary mt-2" onclick='agregarAlCarrito(${JSON.stringify(prod)})'>Agregar al carrito</button>
+        <div class="card h-100 text-center">
+          <img src="${prod.imagen}" alt="${prod.nombre}" style="object-fit:contain; max-height:200px;" class="card-img-top" />
+          <div class="card-body">
+            <h5 class="card-title">${prod.nombre}</h5>
+            <p class="card-text text-success font-weight-bold">$${prod.precio}</p>
+            <button class="btn btn-sm btn-outline-primary">Agregar al carrito</button>
+          </div>
         </div>
       `;
+
+      div.querySelector('button').addEventListener('click', () => agregarAlCarrito(prod));
+
       contenedor.appendChild(div);
     });
 
-    // Guardamos el catálogo para otras funciones (IA, recomendaciones, etc.)
     localStorage.setItem('catalogo', JSON.stringify(productos));
   })
   .catch(error => {
     console.error("Error al cargar el catálogo:", error);
   });
 
-  function actualizarContadorCarrito() {
-  const contador = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
-  document.getElementById("contador-carrito").textContent = contador > 0 ? `(${contador})` : '';
-}
-
-// Llamar al cargar
+// Actualizar contador al cargar
 actualizarContadorCarrito();
