@@ -1,29 +1,31 @@
 export function recomendar(catalogo, carrito) {
   const recomendaciones = [];
+
+  if (!Array.isArray(catalogo) || !Array.isArray(carrito) || carrito.length === 0) {
+    return [];
+  }
+
   const categoriasRelacionadas = {
     blusas: 'pantalones',
     pantalones: 'zapatos',
     zapatos: 'blusas'
   };
 
-  // Creamos un Set para evitar productos duplicados
   const productosRecomendados = new Set();
+  const idsEnCarrito = carrito.map(p => p.id || p.producto_id);
 
   carrito.forEach(prod => {
-    const categoriaRelacionada = categoriasRelacionadas[prod.categoria];
+    const categoria = prod.categoria?.toLowerCase();
+    const categoriaRelacionada = categoriasRelacionadas[categoria];
 
     if (categoriaRelacionada) {
-      // Filtra productos que coinciden con la categoría relacionada
-      // y que NO están ya en el carrito
       const relacionados = catalogo.filter(p =>
-        p.categoria === categoriaRelacionada &&
-        !carrito.some(c => c.id === p.id)
+        p.categoria?.toLowerCase() === categoriaRelacionada &&
+        !idsEnCarrito.includes(p.id)
       );
 
-      // Mezclar recomendaciones (aleatorias)
       const mezclados = relacionados.sort(() => 0.5 - Math.random());
 
-      // Agregamos hasta 3 productos únicos que no se hayan sugerido antes
       for (const item of mezclados) {
         if (!productosRecomendados.has(item.id)) {
           recomendaciones.push(item);
@@ -37,4 +39,3 @@ export function recomendar(catalogo, carrito) {
 
   return recomendaciones;
 }
-

@@ -1,39 +1,31 @@
-import { recomendar } from './ia.js';
+// usar-ia.js
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("usar-ia.js cargado");
-
-  const catalogo = JSON.parse(localStorage.getItem('catalogo')) || [];
-  const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-
-  console.log("Catálogo:", catalogo);
-  console.log("Carrito:", carrito);
-
-  const sugerencias = recomendar(catalogo, carrito);
-  console.log("Sugerencias:", sugerencias);
-
-  const contenedor = document.getElementById('sugerencias');
-  if (!contenedor) {
-    console.warn("No existe el contenedor #sugerencias");
-    return;
+/**
+ * Recomienda productos con base en el catálogo completo y el carrito actual del usuario.
+ * 
+ * @param {Array} catalogo - Todos los productos disponibles.
+ * @param {Array} carrito - Productos actualmente en el carrito.
+ * @returns {Array} Lista de productos recomendados (máx. 4).
+ */
+export function recomendar(catalogo, carrito) {
+  if (!Array.isArray(catalogo) || catalogo.length === 0) {
+    console.warn('Catálogo vacío o no definido.');
+    return [];
   }
 
-  if (sugerencias.length === 0) {
-    contenedor.innerHTML = `<p class="text-center">No hay sugerencias por el momento.</p>`;
-    return;
+  if (!Array.isArray(carrito)) carrito = [];
+
+  // Obtener IDs de productos ya en el carrito
+  const idsEnCarrito = carrito.map(p => p.id);
+
+  // Filtrar productos del catálogo que NO están en el carrito
+  const productosSugeridos = catalogo.filter(p => !idsEnCarrito.includes(p.id));
+
+  // Si no quedan sugerencias, devolver los primeros 4 del catálogo original
+  if (productosSugeridos.length === 0) {
+    return catalogo.slice(0, 4);
   }
 
-  sugerencias.forEach(prod => {
-    const div = document.createElement('div');
-    div.classList.add('col-md-4');
-    div.innerHTML = `
-      <div class="product-box text-center p-3" style="border:1px solid #ddd; margin-bottom: 30px;">
-        <img src="${prod.imagen}" alt="${prod.nombre}" style="width:100%; max-height:200px; object-fit:contain;">
-        <h4 class="mt-3">${prod.nombre}</h4>
-        <p class="text-success font-weight-bold">$${prod.precio}</p>
-      </div>
-    `;
-    contenedor.appendChild(div);
-  });
-});
-
+  // Elegir hasta 4 productos sugeridos
+  return productosSugeridos.slice(0, 3);
+}

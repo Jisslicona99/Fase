@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Mi Carrito</title>
+    <title>Mi Carrito | Draknor</title>
 
     <!-- Estilos de la plantilla -->
     <link rel="stylesheet" href="css/bootstrap.min.css" />
@@ -16,14 +16,12 @@
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
 
     <style>
-      /* Espaciado para tarjetas de productos */
-      .product_box {
-        margin-bottom: 30px;
-      }
-      .product_img {
-        max-height: 150px;
-        object-fit: contain;
-      }
+      
+      .product_box { margin-bottom: 30px; }
+      .product_img { max-height: 200px; object-fit: contain; }
+      /* Resumen de totales (manteniendo el estilo Bootstrap de tu template) */
+      .card-summary { border:1px solid #ddd; border-radius: 10px; }
+      .card-summary .row > div { padding: 6px 0; }
     </style>
   </head>
 
@@ -54,7 +52,7 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarsExample04">
                   <ul class="navbar-nav ml-auto" id="nav-list">
-                    <!-- Nav dinámico -->
+                    <!-- Nav dinámico (se rellena con el script al final) -->
                   </ul>
                 </div>
               </nav>
@@ -67,19 +65,45 @@
     <!-- Contenido principal -->
     <section class="shop section">
       <div class="container">
-        <h2 class="text-center mb-4">🛒 Productos en tu carrito</h2>
+        <h2 class="text-center mb-4">Tu carrito</h2>
 
         <div class="row" id="carrito">
-          <!-- Aquí se insertan los productos con JS -->
+          <!-- Render de productos desde carrito.js -->
         </div>
 
-        <div class="text-center">
-          <button id="btn-limpiar" class="btn btn-danger mt-3">Limpiar Carrito</button>
+        <!-- Resumen de totales (consumido por carrito.js -> actualizarTotales) -->
+        <div class="row justify-content-center mt-3">
+          <div class="col-12 col-md-8">
+            <div class="card-summary p-3 text-center bg-white">
+              <div class="row">
+                <div class="col-6 text-muted">Artículos</div>
+                <div class="col-6"><strong id="total-items">0</strong></div>
+
+                <div class="col-6 text-muted">Subtotal</div>
+                <div class="col-6"><strong>$ <span id="total-sin-impuestos">0.00</span></strong></div>
+
+                <div class="col-6 text-muted">ISV (16%)</div>
+                <div class="col-6"><strong>$ <span id="impuestos">0.00</span></strong></div>
+
+                <div class="col-12"><hr class="my-2" /></div>
+
+                <div class="col-6 text-muted">Total</div>
+                <div class="col-6">
+                  <strong class="h5">$ <span id="total-con-impuestos">0.00</span></strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <!-- Mantengo tu mismo botón -->
+              <button id="btn-limpiar" class="btn btn-danger mt-3">Limpiar Carrito</button>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Sección de sugerencias (si usas IA) -->
+    <!-- Sección de sugerencias -->
     <section class="shop section">
       <div class="container">
         <h2 class="text-center mb-4">También te podría interesar</h2>
@@ -115,7 +139,7 @@
       </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Scripts base -->
     <script src="js/jquery-3.6.0.min.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.bundle.min.js"></script>
@@ -123,14 +147,103 @@
     <script src="js/custom.js"></script>
 
     <!-- Sugerencias con IA -->
-    <script type="module" src="js/usar-ia.js"></script>
+        <script type="module">
+      import { recomendar } from './js/usar-ia.js';
 
+      // Igual que en carrito.js
+      const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
+
+      async function cargarSugerencias() {
+        const usuario = JSON.parse(localStorage.getItem('usuario'));
+        const key = usuario ? `carrito_${usuario.username}` : 'carrito';
+        const carrito = JSON.parse(localStorage.getItem(key) || '[]');
+
+        const catalogo = await fetch(`${API_BASE}/api/catalogo`)
+          .then(res => res.json())
+          .catch(() => []);
+
+        const sugerencias = recomendar(catalogo, carrito);
+        const contenedor = document.getElementById('sugerencias');
+        contenedor.innerHTML = '';
+
+        if (!sugerencias || sugerencias.length === 0) {
+          contenedor.innerHTML = '<p class="text-center w-100">No hay sugerencias por ahora.</p>';
+          return;
+        }
+
+        sugerencias.forEach(prod => {
+          const col = document.createElement('div');
+          col.className = 'col-md-4 product_box';
+          col.innerHTML = `
+            <div class="card h-100">
+              <img src="images/${prod.imagen}" class="card-img-top product_img" alt="${prod.nombre}" />
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">${prod.nombre}</h5>
+                <p class="card-text">Precio: $${Number(prod.precio).toFixed(2)}</p>
+                <button class="btn btn-primary mt-auto btn-agregar" data-id="${prod.id}">Agregar al carrito</button>
+              </div>
+            </div>
+          `;
+          contenedor.appendChild(col);
+        });
+
+        // Acción real: POST al backend + sincronía + reload
+        document.querySelectorAll('.btn-agregar').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const id = Number(e.currentTarget.dataset.id);
+
+            // Asegura sesión
+            const me = await fetch(`${API_BASE}/api/me`, { credentials: 'include' }).then(r => r.json()).catch(() => null);
+            if (!me?.authenticated) {
+              alert('Inicia sesión para agregar al carrito');
+              window.location.href = 'login.html';
+              return;
+            }
+
+            // Agrega 1 unidad
+            const r = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ producto_id: id, cantidad: 1 })
+            });
+            if (!r.ok) {
+              alert('No se pudo agregar al carrito');
+              return;
+            }
+
+            // Refresca localStorage para que las sugerencias se ajusten
+            const nuevoCarrito = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, { credentials: 'include' })
+              .then(res => res.json())
+              .catch(() => []);
+            localStorage.setItem(`carrito_${me.user.username}`, JSON.stringify(nuevoCarrito.map(p => ({
+              producto_id: Number(p.producto_id),
+              id: Number(p.producto_id),
+              nombre: p.nombre, precio: Number(p.precio), imagen: p.imagen, cantidad: Number(p.cantidad)
+            }))));
+
+            // Notifica y recarga para ver el cambio en el listado/totales
+            try { window.dispatchEvent(new CustomEvent('carrito:synced')); } catch {}
+            location.reload();
+          });
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', cargarSugerencias);
+      window.addEventListener('carrito:synced', cargarSugerencias)
+
+
+        // Acción de agregar (placeholder – integra con tu flujo si ya lo tienes)
+        document.querySelectorAll('.btn-agregar').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const id = e.currentTarget.getAttribute('data-id');
+            alert(`Agregar producto ID ${id} al carrito`);
+          });
+        });
+    </script>
+
+    <!-- Navbar dinámico (mismo look; sin tocar botones/estilos) -->
     <script>
-      $(window).on("load", function () {
-        $(".loader_bg").fadeOut("slow");
-      });
-
-      // Mostrar navbar según usuario y actualizar contador carrito
       document.addEventListener('DOMContentLoaded', () => {
         const usuario = JSON.parse(localStorage.getItem('usuario'));
         const nav = document.getElementById('nav-list');
@@ -145,31 +258,15 @@
           `;
 
           document.getElementById('logout').addEventListener('click', async e => {
-          e.preventDefault();
-
-          try {
-            // Primero borra el carrito del backend
-            const res = await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
-              method: 'DELETE'
-            });
-
-            if (!res.ok) throw new Error('No se pudo limpiar el carrito en el backend');
-
-            // Luego borra datos del LocalStorage
+            e.preventDefault();
+            try {
+              await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, { method: 'DELETE' });
+            } catch {}
             localStorage.removeItem(`carrito_${usuario.username}`);
             localStorage.removeItem('usuario');
-
             alert('Sesión cerrada y carrito limpiado.');
-            window.location.href = 'index.html'; // Redirecciona a inicio
-          } catch (error) {
-            console.error('Error al cerrar sesión:', error);
-            alert('Hubo un error al cerrar sesión. Inténtalo de nuevo.');
-          }
-        });
-
-
-          cargarCarrito(usuario);
-
+            window.location.href = 'index.html';
+          });
         } else {
           nav.innerHTML = `
             <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
@@ -178,116 +275,11 @@
             <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
             <li class="nav-item"><a class="nav-link" href="register.html">Registrar</a></li>
           `;
-
-          cargarCarrito(null);
         }
-
-        // Botón limpiar carrito
-        document.getElementById('btn-limpiar').addEventListener('click', async () => {
-          const user = JSON.parse(localStorage.getItem('usuario'));
-          if (user) {
-            // Limpiar backend y localStorage usuario
-            await fetch(`http://localhost:3000/api/carrito/${user.id}`, { method: 'DELETE' }).catch(console.error);
-            localStorage.removeItem(`carrito_${user.username}`);
-          } else {
-            // Solo localStorage genérico
-            localStorage.removeItem('carrito');
-          }
-          alert('Carrito limpio');
-          location.reload();
-        });
       });
-
-      // Carga y renderiza carrito (localStorage) para usuario o anon
-      async function cargarCarrito(usuario) {
-        let carrito = [];
-
-        if (usuario) {
-          carrito = JSON.parse(localStorage.getItem(`carrito_${usuario.username}`)) || [];
-        } else {
-          carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-        }
-
-        actualizarContadorCarrito(carrito);
-
-        const contenedor = document.getElementById('carrito');
-        contenedor.innerHTML = '';
-
-        if (carrito.length === 0) {
-          contenedor.innerHTML = '<p class="text-center w-100">Tu carrito está vacío.</p>';
-          return;
-        }
-
-        carrito.forEach((prod, index) => {
-          const col = document.createElement('div');
-          col.className = 'col-md-4 product_box';
-
-          col.innerHTML = `
-          <div class="card h-100">
-            <img src="images/${prod.imagen}" class="card-img-top product_img" alt="${prod.nombre}" />
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">${prod.nombre}</h5>
-              <p class="card-text">Precio: $${prod.precio.toFixed(2)}</p>
-              <p class="card-text">Cantidad: ${prod.cantidad}</p>
-              <button class="btn btn-danger mt-auto btn-eliminar" data-id="${prod.id}">Eliminar</button>
-            </div>
-          </div>
-        `;
-
-
-          contenedor.appendChild(col);
-        });
-
-        // Asociar evento eliminar producto
-        document.querySelectorAll('.btn-eliminar').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = e.target.getAttribute('data-id');
-            await eliminarDelCarrito(id, usuario);
-          });
-        });
-      }
-
-      // Actualiza el contador en navbar
-      function actualizarContadorCarrito(carrito) {
-        const contador = document.getElementById('contador-carrito');
-        const total = carrito.reduce((acc, p) => acc + p.cantidad, 0);
-        contador.textContent = total > 0 ? `(${total})` : '';
-      }
-
-      // Eliminar producto de carrito (localStorage + backend si usuario)
-      async function eliminarDelCarrito(id, usuario) {
-        let carrito = [];
-
-        if (usuario) {
-          const key = `carrito_${usuario.username}`;
-          carrito = JSON.parse(localStorage.getItem(key)) || [];
-          carrito = carrito.filter(p => p.id !== id);
-          localStorage.setItem(key, JSON.stringify(carrito));
-          // Actualizar backend enviando carrito filtrado
-          // Alternativa: eliminar solo ese producto, pero backend no define endpoint específico para eso.
-          // Entonces actualizamos todo el carrito en backend (POST para cada producto).
-          // Pero para simplificar, podemos hacer DELETE total y luego POST de cada producto restante.
-          try {
-            await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, { method: 'DELETE' });
-            for (const p of carrito) {
-              await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ producto_id: p.id, cantidad: p.cantidad }),
-              });
-            }
-          } catch (error) {
-            console.error('Error actualizando backend al eliminar producto:', error);
-          }
-
-        } else {
-          carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-          carrito = carrito.filter(p => p.id !== id);
-          localStorage.setItem('carrito', JSON.stringify(carrito));
-        }
-
-        cargarCarrito(usuario);
-      }
     </script>
+
+    <!-- Tu lógica del carrito (BD + sesión) -->
+    <script type="module" src="js/carrito.js" defer></script>
   </body>
 </html>
