@@ -147,100 +147,83 @@
     <script src="js/custom.js"></script>
 
     <!-- Sugerencias con IA -->
-        <script type="module">
-      import { recomendar } from './js/usar-ia.js';
+    <script type="module">
+  import { recomendar } from './js/usar-ia.js';
+  const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
 
-      // Igual que en carrito.js
-      const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
+  async function cargarSugerencias() {
+    const usuario = JSON.parse(localStorage.getItem('usuario'));
+    const key = usuario ? `carrito_${usuario.username}` : 'carrito';
+    const carrito = JSON.parse(localStorage.getItem(key) || '[]');
 
-      async function cargarSugerencias() {
-        const usuario = JSON.parse(localStorage.getItem('usuario'));
-        const key = usuario ? `carrito_${usuario.username}` : 'carrito';
-        const carrito = JSON.parse(localStorage.getItem(key) || '[]');
+    const catalogo = await fetch(`${API_BASE}/api/catalogo`, { credentials:'include' })
+      .then(res => res.json()).catch(() => []);
 
-        const catalogo = await fetch(`${API_BASE}/api/catalogo`)
-          .then(res => res.json())
-          .catch(() => []);
+    const sugerencias = recomendar(catalogo, carrito);
+    const cont = document.getElementById('sugerencias');
+    cont.innerHTML = '';
 
-        const sugerencias = recomendar(catalogo, carrito);
-        const contenedor = document.getElementById('sugerencias');
-        contenedor.innerHTML = '';
+    if (!sugerencias?.length) {
+      cont.innerHTML = '<p class="text-center w-100">No hay sugerencias por ahora.</p>';
+      return;
+    }
 
-        if (!sugerencias || sugerencias.length === 0) {
-          contenedor.innerHTML = '<p class="text-center w-100">No hay sugerencias por ahora.</p>';
+    for (const prod of sugerencias) {
+      const col = document.createElement('div');
+      col.className = 'col-md-4 product_box';
+      col.innerHTML = `
+        <div class="card h-100">
+          <img src="images/${prod.imagen}" class="card-img-top product_img" alt="${prod.nombre}" />
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${prod.nombre}</h5>
+            <p class="card-text">Precio: $${Number(prod.precio).toFixed(2)}</p>
+            <button class="btn btn-primary mt-auto btn-agregar" data-id="${prod.id}">Agregar al carrito</button>
+          </div>
+        </div>`;
+      cont.appendChild(col);
+    }
+
+    document.querySelectorAll('.btn-agregar').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = Number(e.currentTarget.dataset.id);
+
+        // exige sesión
+        const me = await fetch(`${API_BASE}/api/me`, { credentials:'include' })
+          .then(r => r.json()).catch(() => null);
+        if (!me?.authenticated) {
+          alert('Inicia sesión para agregar al carrito');
+          window.location.href = 'login.html';
           return;
         }
 
-        sugerencias.forEach(prod => {
-          const col = document.createElement('div');
-          col.className = 'col-md-4 product_box';
-          col.innerHTML = `
-            <div class="card h-100">
-              <img src="images/${prod.imagen}" class="card-img-top product_img" alt="${prod.nombre}" />
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title">${prod.nombre}</h5>
-                <p class="card-text">Precio: $${Number(prod.precio).toFixed(2)}</p>
-                <button class="btn btn-primary mt-auto btn-agregar" data-id="${prod.id}">Agregar al carrito</button>
-              </div>
-            </div>
-          `;
-          contenedor.appendChild(col);
+        // agrega +1 en servidor
+        const add = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ producto_id: id, cantidad: 1 })
         });
+        if (!add.ok) { alert('No se pudo agregar'); return; }
 
-        // Acción real: POST al backend + sincronía + reload
-        document.querySelectorAll('.btn-agregar').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const id = Number(e.currentTarget.dataset.id);
+        // refresca LS para sugerencias y badge
+        const nuevo = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, { credentials: 'include' })
+          .then(r => r.json()).catch(() => []);
+        localStorage.setItem(`carrito_${me.user.username}`, JSON.stringify(nuevo.map(p=>({
+          id: Number(p.producto_id), nombre: p.nombre, precio: Number(p.precio),
+          imagen: p.imagen, cantidad: Number(p.cantidad)
+        }))));
 
-            // Asegura sesión
-            const me = await fetch(`${API_BASE}/api/me`, { credentials: 'include' }).then(r => r.json()).catch(() => null);
-            if (!me?.authenticated) {
-              alert('Inicia sesión para agregar al carrito');
-              window.location.href = 'login.html';
-              return;
-            }
+        try { window.dispatchEvent(new CustomEvent('carrito:synced')); } catch {}
+        // opcional: sin recargar, si tu carrito.js escucha `carrito:synced` ya actualiza; si no:
+        location.reload();
+      });
+    });
+  }
 
-            // Agrega 1 unidad
-            const r = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ producto_id: id, cantidad: 1 })
-            });
-            if (!r.ok) {
-              alert('No se pudo agregar al carrito');
-              return;
-            }
+  document.addEventListener('DOMContentLoaded', cargarSugerencias);
+  window.addEventListener('carrito:synced', cargarSugerencias);
+</script>
 
-            // Refresca localStorage para que las sugerencias se ajusten
-            const nuevoCarrito = await fetch(`${API_BASE}/api/carrito/${me.user.id}`, { credentials: 'include' })
-              .then(res => res.json())
-              .catch(() => []);
-            localStorage.setItem(`carrito_${me.user.username}`, JSON.stringify(nuevoCarrito.map(p => ({
-              producto_id: Number(p.producto_id),
-              id: Number(p.producto_id),
-              nombre: p.nombre, precio: Number(p.precio), imagen: p.imagen, cantidad: Number(p.cantidad)
-            }))));
-
-            // Notifica y recarga para ver el cambio en el listado/totales
-            try { window.dispatchEvent(new CustomEvent('carrito:synced')); } catch {}
-            location.reload();
-          });
-        });
-      }
-
-      document.addEventListener('DOMContentLoaded', cargarSugerencias);
-      window.addEventListener('carrito:synced', cargarSugerencias)
-
-
-        // Acción de agregar (placeholder – integra con tu flujo si ya lo tienes)
-        document.querySelectorAll('.btn-agregar').forEach(btn => {
-          btn.addEventListener('click', e => {
-            const id = e.currentTarget.getAttribute('data-id');
-            alert(`Agregar producto ID ${id} al carrito`);
-          });
-        });
-    </script>
 
     <!-- Navbar dinámico (mismo look; sin tocar botones/estilos) -->
     <script>
@@ -257,16 +240,21 @@
             <li class="nav-item"><a class="nav-link" href="#" id="logout">Cerrar sesión</a></li>
           `;
 
+          // === ÚNICO CAMBIO: handler de "Cerrar sesión" ===
           document.getElementById('logout').addEventListener('click', async e => {
             e.preventDefault();
             try {
-              await fetch(`http://localhost:3000/api/carrito/${usuario.id}`, { method: 'DELETE' });
+              await fetch('http://localhost:3000/api/logout', {
+                method: 'POST',
+                credentials: 'include'
+              });
             } catch {}
+            // No borrar carrito en BD. Solo limpiar almacenamiento local:
             localStorage.removeItem(`carrito_${usuario.username}`);
             localStorage.removeItem('usuario');
-            alert('Sesión cerrada y carrito limpiado.');
             window.location.href = 'index.html';
           });
+
         } else {
           nav.innerHTML = `
             <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>

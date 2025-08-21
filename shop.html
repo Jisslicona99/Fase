@@ -11,6 +11,13 @@
   <link rel="stylesheet" href="css/responsive.css" />
   <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
+
+  <script>
+  // Redirige 127.0.0.1 -> localhost para que la cookie de sesión funcione
+  if (location.hostname === '127.0.0.1') {
+    location.replace(location.href.replace('127.0.0.1', 'localhost'));
+  }
+</script>
 </head>
 
 <body class="main-layout">
@@ -88,28 +95,38 @@
   <script src="js/bootstrap.bundle.min.js"></script>
   <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
 
-  <script>
-    $(window).on("load", function () { $(".loader_bg").fadeOut("slow"); });
+  <!-- Loader -->
+  <script>$(window).on("load", function(){ $(".loader_bg").fadeOut("slow"); });</script>
 
-    // =================== SHOP LOGIC ===================
+  <!-- ====== SHOP LOGIC (con fix de sesión localhost/127.0.0.1) ====== -->
+  <script>
+    // 1) Auto-fix: si estás en 127.0.0.1 redirige a localhost (cookies de sesión)
+    if (location.hostname === '127.0.0.1') {
+      const to = location.href.replace('127.0.0.1', 'localhost');
+      // Evita loops si ya es localhost
+      if (!/localhost/.test(location.hostname)) location.replace(to);
+    }
+
+    // 2) API base: sirve desde 3000 o Live Server 5500
     const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
-    const money = new Intl.NumberFormat('es-HN', { style: 'currency', currency: 'HNL' });
+    const money = new Intl.NumberFormat('es-HN', { style:'currency', currency:'HNL' });
 
     document.addEventListener('DOMContentLoaded', initShop);
 
     async function initShop() {
       const user = await getUser();
       renderNav(user);
-      if (user) await syncCartFromBackend(user); // para sugerencias y badge
+      if (user) await syncCartFromBackend(user); // para sugerencias/badge
       await cargarProductos(user);
       actualizarContadorCarrito(user);
     }
 
-    // ----- Usuario LS/ sesión -----
+    // ----- Usuario desde LS o /api/me -----
     async function getUser() {
-      let u = null;
-      try { u = JSON.parse(localStorage.getItem('usuario')); } catch {}
-      if (u?.id) return u;
+      try {
+        const u = JSON.parse(localStorage.getItem('usuario'));
+        if (u?.id) return u;
+      } catch {}
       try {
         const me = await fetch(`${API_BASE}/api/me`, { credentials:'include' }).then(r=>r.json());
         if (me?.authenticated && me.user) {
@@ -135,11 +152,10 @@
         `;
         document.getElementById('logout')?.addEventListener('click', async (e) => {
           e.preventDefault();
-          // Cierra sesión pero NO borra carrito en BD (así se conserva)
           await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' }).catch(()=>{});
-          localStorage.removeItem('usuario');
-          // opcional: también puedes limpiar el LS del carrito del usuario
+          // Conservamos carrito en BD; limpiamos LS
           localStorage.removeItem(`carrito_${usuario.username}`);
+          localStorage.removeItem('usuario');
           window.location.href = 'index.html';
         });
       } else {
@@ -176,8 +192,8 @@
     async function cargarProductos(usuario) {
       try {
         const productos = await fetch(`${API_BASE}/api/catalogo`).then(r=>r.json());
-        const contenedor = document.getElementById('productos-listado');
-        contenedor.innerHTML = '';
+        const cont = document.getElementById('productos-listado');
+        cont.innerHTML = '';
 
         productos.forEach(p => {
           const col = document.createElement('div');
@@ -199,30 +215,28 @@
               </div>
             </div>
           `;
-          contenedor.appendChild(col);
+          cont.appendChild(col);
         });
 
-        // clicks "Agregar al carrito"
         document.querySelectorAll('.agregar-carrito').forEach(btn => {
           btn.addEventListener('click', (e) => agregarAlCarrito(e, usuario));
         });
 
       } catch (err) {
         console.error('Error cargando productos:', err);
-        const contenedor = document.getElementById('productos-listado');
-        contenedor.innerHTML = '<p class="text-center w-100">Error cargando productos.</p>';
+        document.getElementById('productos-listado').innerHTML =
+          '<p class="text-center w-100">Error cargando productos.</p>';
       }
     }
 
     // ----- Agregar al carrito (delta = +1) -----
     async function agregarAlCarrito(e, usuario) {
       const b = e.currentTarget;
-      const id      = Number(b.dataset.id);
-      const nombre  = b.dataset.nombre;
-      const precio  = Number(b.dataset.precio);
-      const imagen  = b.dataset.imagen;
+      const id = Number(b.dataset.id);
+      const nombre = b.dataset.nombre;
+      const precio = Number(b.dataset.precio);
+      const imagen = b.dataset.imagen;
 
-      // Asegura sesión
       let user = usuario;
       if (!user) user = await getUser();
       if (!user) {
@@ -232,7 +246,6 @@
       }
 
       try {
-        // En BD sumamos 1 (delta)
         const r = await fetch(`${API_BASE}/api/carrito/${user.id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -241,7 +254,7 @@
         });
         if (!r.ok) throw new Error('No se pudo agregar en el servidor');
 
-        // En LS reflejamos el nuevo estado (para sugerencias/badge)
+        // Refleja en LS (para badge/sugerencias)
         const key = `carrito_${user.username}`;
         const cart = JSON.parse(localStorage.getItem(key) || '[]');
         const found = cart.find(x => Number(x.id) === id);
@@ -274,12 +287,11 @@
       if (!z) return alert(msg);
       z.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         ${msg}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       </div>`;
-      setTimeout(()=>{ z.innerHTML=''; }, 2000);
+      setTimeout(()=>{ z.innerHTML=''; }, 1800);
     }
   </script>
 </body>
 </html>
+

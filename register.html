@@ -10,6 +10,13 @@
     .card { border-radius: 16px; }
     .brand { font-weight: 700; letter-spacing: .5px; color: #fff; text-align:center; margin-bottom: 1rem; }
   </style>
+
+  <!-- Fix cookies de sesión: 127.0.0.1 -> localhost -->
+  <script>
+    if (location.hostname === '127.0.0.1') {
+      location.replace(location.href.replace('127.0.0.1', 'localhost'));
+    }
+  </script>
 </head>
 <body>
   <main class="container" style="max-width: 480px;">
@@ -18,22 +25,27 @@
     <div class="card shadow">
       <div class="card-body p-4">
         <h2 class="h5 mb-3">Crear cuenta</h2>
+
+        <!-- Mantengo tus ids y estilo -->
         <form id="regForm" novalidate>
           <div class="mb-3">
             <label for="username" class="form-label">Usuario</label>
             <input type="text" class="form-control" id="username" required placeholder="tuusuario">
-            <div class="invalid-feedback">Usuario requerido (3–20 caracteres: letras, números, . _ -)</div>
+            <div class="invalid-feedback">Usuario requerido (3–20: letras, números, . _ -)</div>
           </div>
+
           <div class="mb-3">
             <label for="email" class="form-label">Correo</label>
             <input type="email" class="form-control" id="email" required placeholder="correo@ejemplo.com">
             <div class="invalid-feedback">Correo inválido</div>
           </div>
+
           <div class="mb-2">
             <label for="password" class="form-label">Contraseña</label>
             <input type="password" class="form-control" id="password" required placeholder="mínimo 6 caracteres">
             <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
           </div>
+
           <div class="mb-2">
             <label for="password2" class="form-label">Confirmar contraseña</label>
             <input type="password" class="form-control" id="password2" required placeholder="repite la contraseña">
@@ -54,79 +66,92 @@
   </main>
 
   <script>
-    const API_BASE = 'http://localhost:3000';
+    const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
 
-    const form = document.getElementById('regForm');
-    const msg  = document.getElementById('msg');
-    const btn  = document.getElementById('submitBtn');
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('regForm');
+      const msg  = document.getElementById('msg');
+      const btn  = document.getElementById('submitBtn');
 
-    const $ = id => document.getElementById(id);
-
-    function showAlert(type, text) {
-      msg.innerHTML = `<div class="alert alert-${type} mb-0" role="alert">${text}</div>`;
-    }
-    function setLoading(v) {
-      btn.disabled = v;
-      btn.innerHTML = v
-        ? `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Creando...`
-        : `Crear cuenta`;
-    }
-
-    function validate() {
-      let ok = true;
-      const u = $('username'), e = $('email'), p = $('password'), p2 = $('password2');
-      const uVal = u.value.trim();
-      const eVal = e.value.trim();
-      const pVal = p.value.trim();
-      const p2Val = p2.value.trim();
-
-      // usuario
-      if (!/^[a-zA-Z0-9._-]{3,20}$/.test(uVal)) { u.classList.add('is-invalid'); ok = false; } else u.classList.remove('is-invalid');
-      // email
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eVal)) { e.classList.add('is-invalid'); ok = false; } else e.classList.remove('is-invalid');
-      // password
-      if (pVal.length < 6) { p.classList.add('is-invalid'); ok = false; } else p.classList.remove('is-invalid');
-      // confirm
-      if (pVal !== p2Val) { p2.classList.add('is-invalid'); ok = false; } else p2.classList.remove('is-invalid');
-
-      return ok;
-    }
-
-    form.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      msg.innerHTML = '';
-      if (!validate()) { showAlert('danger', 'Corrige los campos marcados.'); return; }
-
-      const payload = {
-        username: $('username').value.trim(),
-        email: $('email').value.trim(),
-        password: $('password').value.trim()
-      };
-
-      try {
-        setLoading(true);
-        const r = await fetch(API_BASE + '/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // guardará cookie de sesión
-          body: JSON.stringify(payload)
+      // Limpia estado inválido al tipear
+      ['username','email','password','password2'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e)=>{
+          e.target.classList.remove('is-invalid');
+          msg.innerHTML = '';
         });
-        const j = await r.json().catch(() => ({}));
+      });
 
-        if (!r.ok || !j.ok) {
-          showAlert('danger', j.error || 'No se pudo registrar');
-          setLoading(false);
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        msg.innerHTML = '';
+
+        const username = document.getElementById('username').value.trim();
+        const email    = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const password2= document.getElementById('password2').value.trim();
+
+        // Validaciones suaves
+        const userOk = /^[a-zA-Z0-9._-]{3,20}$/.test(username);
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        const passOk = password.length >= 6;
+        const matchOk = password === password2;
+
+        if (!userOk) document.getElementById('username').classList.add('is-invalid');
+        if (!emailOk) document.getElementById('email').classList.add('is-invalid');
+        if (!passOk) document.getElementById('password').classList.add('is-invalid');
+        if (!matchOk) document.getElementById('password2').classList.add('is-invalid');
+
+        if (!userOk || !emailOk || !passOk || !matchOk) {
+          msg.innerHTML = `<div class="alert alert-danger py-2 mb-0">Revisa los campos marcados.</div>`;
+          (document.querySelector('.is-invalid') || document.getElementById('username')).focus();
           return;
         }
 
-        showAlert('success', '¡Cuenta creada! iniciando');
-        setTimeout(() => { window.location.href = 'shop.html'; }, 800);
+        try {
+          btn.disabled = true;
+          msg.innerHTML = `<div class="alert alert-info py-2 mb-0">Creando cuenta…</div>`;
 
-      } catch (e) {
-        showAlert('danger', 'Error de conexión con el servidor');
-      } finally {
-        setLoading(false);
-      }
+          // 1) Registro
+          const r = await fetch(`${API_BASE}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, email, password })
+          });
+          const data = await r.json();
+          if (!r.ok || data?.ok === false) {
+            throw new Error(data?.error || 'No se pudo registrar');
+          }
+
+          // 2) Auto-login para crear sesión y cookie
+          const lg = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, password })
+          });
+          const d2 = await lg.json();
+          if (!lg.ok || d2?.ok === false) {
+            throw new Error('Cuenta creada, pero no se pudo iniciar sesión');
+          }
+
+          // 3) Guardar usuario en LS (del payload o de /api/me)
+          let user = d2?.user;
+          if (!user) {
+            const me = await fetch(`${API_BASE}/api/me`, { credentials:'include' }).then(x => x.json());
+            if (me?.authenticated && me.user) user = me.user;
+          }
+          if (user) localStorage.setItem('usuario', JSON.stringify(user));
+
+          msg.innerHTML = `<div class="alert alert-success py-2 mb-0">Registro exitoso. Redirigiendo…</div>`;
+          setTimeout(()=>{ window.location.href = 'shop.html'; }, 900);
+
+        } catch (err) {
+          msg.innerHTML = `<div class="alert alert-danger py-2 mb-0">${err.message || 'Error al registrar'}</div>`;
+        } finally {
+          btn.disabled = false;
+        }
+      });
     });
   </script>
 </body>

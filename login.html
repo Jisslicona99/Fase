@@ -10,6 +10,13 @@
     .card { border-radius: 16px; }
     .brand { font-weight: 700; letter-spacing: .5px; }
   </style>
+
+  <script>
+    // Redirige 127.0.0.1 -> localhost para que la cookie de sesión funcione
+    if (location.hostname === '127.0.0.1') {
+      location.replace(location.href.replace('127.0.0.1', 'localhost'));
+    }
+  </script>
 </head>
 <body>
 
@@ -68,110 +75,78 @@
     </div>
   </main>
 
+  <!-- JS CORREGIDO (sin cambiar estilos) -->
   <script>
-    // === CONFIGURA TU API ===
-    // Si el front está en otro puerto (p.ej. 5500): deja el host abajo.
-    // Si sirves el HTML desde el mismo Express: usa '' (cadena vacía).
-    const API_BASE = 'http://localhost:3000'; // '' si mismo origen
+    const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
 
-    const form = document.getElementById('loginForm');
-    const msg = document.getElementById('msg');
-    const btn = document.getElementById('submitBtn');
-    const usernameEl = document.getElementById('username');
-    const passwordEl = document.getElementById('password');
-    const togglePwd = document.getElementById('togglePwd');
+    document.addEventListener('DOMContentLoaded', () => {
+      const form   = document.getElementById('loginForm');
+      const msg    = document.getElementById('msg');
+      const btn    = document.getElementById('submitBtn');
+      const toggle = document.getElementById('togglePwd');
 
-    // Mostrar/ocultar contraseña
-    togglePwd.addEventListener('click', () => {
-      const isText = passwordEl.type === 'text';
-      passwordEl.type = isText ? 'password' : 'text';
-      togglePwd.textContent = isText ? '👁️' : '🙈';
-      passwordEl.focus();
-    });
+      if (!form) { console.error('No se encontró #loginForm'); return; }
 
-    function setLoading(isLoading) {
-      btn.disabled = isLoading;
-      if (isLoading) {
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Entrando...`;
-      } else {
-        btn.textContent = 'Iniciar sesión';
-      }
-    }
+      // Toggle mostrar/ocultar contraseña
+      toggle?.addEventListener('click', () => {
+        const inp = document.getElementById('password');
+        inp.type = (inp.type === 'password') ? 'text' : 'password';
+      });
 
-    function showAlert(type, text) {
-      msg.innerHTML = `<div class="alert alert-${type} mb-0" role="alert">${text}</div>`;
-    }
-
-    async function checkSessionAndMaybeRedirect() {
-      try {
-        const r = await fetch(API_BASE + '/api/me', { credentials: 'include' });
-        const j = await r.json();
-        if (j.authenticated) {
-          // ya logueado: ve directo a la tienda
-          window.location.href = 'shop.html';
-        }
-      } catch(_) { /* no importa para esta vista */ }
-    }
-
-    // Validación UI básica
-    function validate() {
-      let ok = true;
-      if (!usernameEl.value.trim()) { usernameEl.classList.add('is-invalid'); ok = false; }
-      else usernameEl.classList.remove('is-invalid');
-
-      if (!passwordEl.value.trim()) { passwordEl.classList.add('is-invalid'); ok = false; }
-      else passwordEl.classList.remove('is-invalid');
-
-      return ok;
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      msg.innerHTML = '';
-
-      if (!validate()) {
-        showAlert('danger', 'Por favor completa los campos requeridos.');
-        return;
-      }
-
-      const payload = {
-        // el backend acepta username O email en el mismo campo
-        username: usernameEl.value.trim(),
-        password: passwordEl.value.trim()
-      };
-
-      try {
-        setLoading(true);
-        const response = await fetch(API_BASE + '/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // ¡envía y guarda la cookie de sesión!
-          body: JSON.stringify(payload)
+      // Limpia estado inválido al escribir
+      ['username','password'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+          e.target.classList.remove('is-invalid');
+          msg.innerHTML = '';
         });
+      });
 
-        const data = await response.json().catch(() => ({}));
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-        if (!response.ok || !data.ok) {
-          const err = (data && (data.error || data.msg)) || 'Error al iniciar sesión';
-          showAlert('danger', err);
-          setLoading(false);
-          return;
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        // Validación mínima
+        let ok = true;
+        if (!username) { document.getElementById('username').classList.add('is-invalid'); ok = false; }
+        if (!password) { document.getElementById('password').classList.add('is-invalid'); ok = false; }
+        if (!ok) { msg.innerHTML = `<div class="alert alert-danger py-2 mb-0">Completa los campos requeridos.</div>`; return; }
+
+        try {
+          btn.disabled = true;
+          msg.innerHTML = `<div class="alert alert-info py-2 mb-0">Validando…</div>`;
+
+          const resp = await fetch(`${API_BASE}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, password })
+          });
+          const data = await resp.json();
+
+          if (!resp.ok || data?.ok === false) {
+            throw new Error(data?.error || 'Usuario o contraseña incorrectos');
+          }
+
+          // Obtiene usuario del payload o de /api/me
+          let user = data?.user;
+          if (!user) {
+            const me = await fetch(`${API_BASE}/api/me`, { credentials: 'include' }).then(r => r.json());
+            if (me?.authenticated && me.user) user = me.user;
+          }
+          if (user) localStorage.setItem('usuario', JSON.stringify(user));
+
+          msg.innerHTML = `<div class="alert alert-success py-2 mb-0">Login exitoso. Redirigiendo…</div>`;
+          setTimeout(() => { window.location.href = 'shop.html'; }, 800);
+
+        } catch (err) {
+          msg.innerHTML = `<div class="alert alert-danger py-2 mb-0">${err.message || 'Error al iniciar sesión'}</div>`;
+        } finally {
+          btn.disabled = false;
         }
-
-        // (opcional) guarda algo superficial para UI
-        try { localStorage.setItem('username', data.user?.username || ''); } catch(_){}
-
-        showAlert('success', 'Login exitoso. Redirigiendo…');
-        setTimeout(() => { window.location.href = 'shop.html'; }, 800);
-
-      } catch (error) {
-        showAlert('danger', 'Error de conexión con el servidor');
-        setLoading(false);
-      }
+      });
     });
-
-    // Si ya hay sesión, redirige
-    checkSessionAndMaybeRedirect();
   </script>
 </body>
 </html>
