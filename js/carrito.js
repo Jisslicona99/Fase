@@ -4,6 +4,7 @@
   const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
 
   let usuarioCache = null;
+  let catalogCache = null; // <-- NUEVO: cache del catálogo por id
 
   document.addEventListener('DOMContentLoaded', init);
 
@@ -38,15 +39,30 @@
       const res = await fetch(`${API_BASE}/api/carrito/${usuarioCache.id}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Error al obtener carrito');
 
-      const carritoAPI = await res.json(); // [{producto_id,cantidad,nombre,precio,imagen}]
-      const carritoUI = carritoAPI.map(p => ({
-        producto_id: Number(p.producto_id),
-        id: Number(p.producto_id), // para usar-ia.js
-        nombre: String(p.nombre || ''),
-        precio: Number(p.precio || 0),
-        imagen: String(p.imagen || ''),
-        cantidad: Number(p.cantidad || 0),
-      }));
+      const carritoAPI = await res.json(); // [{producto_id,cantidad,nombre,descripcion,precio,imagen}]
+
+      // Asegura catálogo en caché para nombres bonitos si falta 'descripcion'
+      const catalogById = await ensureCatalog(); // Map<number, {id, nombre, descripcion, ...}>
+
+      const carritoUI = carritoAPI.map(p => {
+        const idNum = Number(p.producto_id);
+        const catItem = catalogById.get(idNum);
+        const displayName =
+          (p.descripcion && String(p.descripcion).trim()) ||
+          (catItem?.descripcion && String(catItem.descripcion).trim()) ||
+          (catItem?.nombre && String(catItem.nombre).trim()) ||
+          String(p.nombre || '');
+
+        return {
+          producto_id: idNum,
+          id: idNum, // para usar-ia.js
+          nombre: displayName,                 // <-- AQUI usamos el nombre “bonito”
+          descripcion: String(p.descripcion || catItem?.descripcion || ''),
+          precio: Number(p.precio || catItem?.precio || 0),
+          imagen: String(p.imagen || catItem?.imagen || ''),
+          cantidad: Number(p.cantidad || 0),
+        };
+      });
 
       // sincroniza para sugerencias (usar-ia.js)
       localStorage.setItem(`carrito_${usuarioCache.username}`, JSON.stringify(carritoUI));
@@ -71,6 +87,31 @@
     }
   }
 
+  // ----------- Catálogo en caché (NUEVO) -----------
+  async function ensureCatalog() {
+    if (catalogCache) return catalogCache;
+    try {
+      const productos = await fetch(`${API_BASE}/api/catalogo`).then(r => r.json());
+      const map = new Map();
+      for (const p of productos) {
+        map.set(Number(p.id), {
+          id: Number(p.id),
+          nombre: String(p.nombre || ''),
+          descripcion: String(p.descripcion || ''),
+          precio: Number(p.precio || 0),
+          imagen: String(p.imagen || ''),
+          categoria: String(p.categoria || '')
+        });
+      }
+      catalogCache = map;
+      return catalogCache;
+    } catch {
+      // si falla, devuelve un Map vacío para no romper el flujo
+      catalogCache = new Map();
+      return catalogCache;
+    }
+  }
+
   // ----------- Render listado -----------
   function renderCarrito(contenedor, carrito) {
     if (!Array.isArray(carrito) || carrito.length === 0) {
@@ -90,7 +131,6 @@
       const div = document.createElement('div');
       div.classList.add('col-md-4');
 
-      // ⬇️ AQUÍ VA EL BLOQUE NUEVO DE CANTIDAD CON BOTONES − / +
       div.innerHTML = `
         <div class="product-box text-center p-3" style="border:1px solid #ddd; margin-bottom: 30px;">
           <img src="images/${escapeHtml(prod.imagen)}" alt="${escapeHtml(prod.nombre)}"
@@ -142,13 +182,11 @@
 
     try {
       if (nueva <= 0) {
-        // elimina la línea si llega a 0
         await fetch(`${API_BASE}/api/carrito/${usuarioCache.id}/producto/${productoId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
       } else {
-        // suma/resta usando el POST existente (ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad))
         await fetch(`${API_BASE}/api/carrito/${usuarioCache.id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -156,7 +194,6 @@
           body: JSON.stringify({ producto_id: productoId, cantidad: delta })
         });
       }
-      // refresca todo (lista, totales, LS para sugerencias)
       await loadCart();
     } catch (err) {
       console.error(err);
@@ -172,7 +209,6 @@
       });
       if (!res.ok) throw new Error('Error eliminando producto');
 
-      // limpia en LS para sugerencias
       const key = `carrito_${usuarioCache.username}`;
       let carrito = safeJSON(localStorage.getItem(key)) || [];
       carrito = carrito.filter(p => Number(p.id) !== Number(productoId));

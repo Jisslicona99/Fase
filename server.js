@@ -181,12 +181,13 @@ const getCarrito = async (req, res) => {
     if (!usuarioId) return res.status(401).json({ error: 'No autenticado' });
 
     const rows = await q(
-      `SELECT c.producto_id, c.cantidad, p.nombre, p.precio, p.imagen
+      `SELECT c.producto_id, c.cantidad, p.nombre, p.descripcion, p.precio, p.imagen
        FROM carrito c
        JOIN productos p ON c.producto_id = p.id
        WHERE c.usuario_id = ?`,
-      [usuarioId]
+      [usuarioId] // <- aquí va la coma que faltaba
     );
+
     res.json(rows);
   } catch (e) {
     console.error('Error obteniendo carrito:', e);

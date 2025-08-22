@@ -16,11 +16,11 @@
     <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
   
     <script>
-  // Redirige 127.0.0.1 -> localhost para que la cookie de sesión funcione
-  if (location.hostname === '127.0.0.1') {
-    location.replace(location.href.replace('127.0.0.1', 'localhost'));
-  }
-</script>
+      // Redirige 127.0.0.1 -> localhost para que la cookie de sesión funcione
+      if (location.hostname === '127.0.0.1') {
+        location.replace(location.href.replace('127.0.0.1', 'localhost'));
+      }
+    </script>
   </head>
 
   <body class="main-layout">
@@ -115,43 +115,63 @@
 
     <!-- Cargar productos desde base de datos -->
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
+      const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
+
+      document.addEventListener("DOMContentLoaded", async () => {
         const carrusel = document.getElementById("carousel-productos");
 
-        fetch("http://localhost:3000/api/catalogo")
-          .then(response => response.json())
-          .then(data => {
-            data.slice(0, 6).forEach(prod => {
-              const div = document.createElement("div");
-              div.classList.add("item");
+        let data = [];
+        try {
+          data = await fetch(`${API_BASE}/api/catalogo`, { credentials: 'include' })
+            .then(response => response.json());
+        } catch (err) {
+          data = [];
+          console.error("Error al cargar productos:", err);
+        }
 
-              div.innerHTML = `
-                <div class="product-box text-center p-3" style="border:1px solid #ddd;">
-                  <img src="images/${prod.imagen}" alt="${prod.nombre}" style="width:100%; max-height:200px; object-fit:contain;">
-                  <h4 class="mt-3">${prod.nombre}</h4>
-                  <p class="text-success font-weight-bold">$${prod.precio}</p>
-                  <a href="shop.html" class="btn btn-sm btn-primary mt-2">Ver más</a>
-                </div>
-              `;
-              carrusel.appendChild(div);
-            });
+        carrusel.innerHTML = '';
 
-            $(".owl-carousel").owlCarousel({
-              loop: true,
-              margin: 15,
-              nav: true,
-              dots: true,
-              responsive: {
-                0: { items: 1 },
-                600: { items: 2 },
-                1000: { items: 3 }
-              }
-            });
-          })
-          .catch(err => {
-            console.error("Error al cargar productos:", err);
+        if (!data.length) {
+          carrusel.innerHTML = `<div class="item"><p class="text-center text-muted my-4">Aún no hay productos para mostrar.</p></div>`;
+        } else {
+          data.slice(0, 6).forEach(prod => {
+            const div = document.createElement("div");
+            div.classList.add("item");
+            div.innerHTML = `
+              <div class="product-box text-center p-3" style="border:1px solid #ddd;">
+                <img src="images/${escapeHtml(prod.imagen)}" alt="${escapeHtml(prod.nombre)}" style="width:100%; max-height:200px; object-fit:contain;">
+                <h4 class="mt-3">${escapeHtml(prod.nombre)}</h4>
+                <p class="text-success font-weight-bold">$${Number(prod.precio).toFixed(2)}</p>
+                <a href="shop.html" class="btn btn-sm btn-primary mt-2">Ver más</a>
+              </div>
+            `;
+            carrusel.appendChild(div);
           });
+        }
+
+        // Inicialización dirigida al id del carrusel
+        $("#carousel-productos").owlCarousel({
+          loop: true,
+          margin: 15,
+          nav: true,
+          dots: true,
+          autoplay: true,
+          autoplayTimeout: 4000,
+          autoplayHoverPause: true,
+          responsive: {
+            0: { items: 1 },
+            600: { items: 2 },
+            1000: { items: 3 }
+          }
+        });
       });
+
+      function escapeHtml(s) {
+        return String(s || '')
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
     </script>
 
     <!-- Loader -->

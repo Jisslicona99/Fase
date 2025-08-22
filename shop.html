@@ -12,12 +12,25 @@
   <link rel="stylesheet" href="css/jquery.mCustomScrollbar.min.css" />
   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" />
 
+  <style>
+    /* SOLO: hacer más llamativos los encabezados de categoría */
+    .cat-title{
+      font-weight:700;
+      letter-spacing:.3px;
+      padding:.45rem .8rem;
+      border-left:6px solid #0d6efd;
+      background:rgba(13,110,253,.08);
+      border-radius:6px;
+      display:inline-block;
+    }
+  </style>
+
   <script>
   // Redirige 127.0.0.1 -> localhost para que la cookie de sesión funcione
   if (location.hostname === '127.0.0.1') {
     location.replace(location.href.replace('127.0.0.1', 'localhost'));
   }
-</script>
+  </script>
 </head>
 
 <body class="main-layout">
@@ -58,9 +71,9 @@
     <div class="container">
       <h2 class="text-center mb-4">Catálogo de Productos</h2>
       <div id="alert-zone" class="mb-3"></div>
-      <div class="row" id="productos-listado">
-        <!-- Los productos se insertan aquí desde JS -->
-      </div>
+
+      <!-- contenedor raíz (vamos a inyectar secciones por categoría) -->
+      <div id="productos-listado"></div>
     </div>
   </section>
 
@@ -98,26 +111,21 @@
   <!-- Loader -->
   <script>$(window).on("load", function(){ $(".loader_bg").fadeOut("slow"); });</script>
 
-  <!-- ====== SHOP LOGIC (con fix de sesión localhost/127.0.0.1) ====== -->
+  <!-- ====== SHOP LOGIC ====== -->
   <script>
-    // 1) Auto-fix: si estás en 127.0.0.1 redirige a localhost (cookies de sesión)
-    if (location.hostname === '127.0.0.1') {
-      const to = location.href.replace('127.0.0.1', 'localhost');
-      // Evita loops si ya es localhost
-      if (!/localhost/.test(location.hostname)) location.replace(to);
-    }
-
-    // 2) API base: sirve desde 3000 o Live Server 5500
     const API_BASE = (location.port === '3000') ? '' : 'http://localhost:3000';
     const money = new Intl.NumberFormat('es-HN', { style:'currency', currency:'HNL' });
 
     document.addEventListener('DOMContentLoaded', initShop);
 
     async function initShop() {
+      // Limpia catálogo viejo en LS (evita inyecciones de scripts antiguos)
+      try { localStorage.removeItem('catalogo'); } catch {}
+
       const user = await getUser();
       renderNav(user);
-      if (user) await syncCartFromBackend(user); // para sugerencias/badge
-      await cargarProductos(user);
+      if (user) await syncCartFromBackend(user);
+      await cargarProductosAgrupados(user);
       actualizarContadorCarrito(user);
     }
 
@@ -153,7 +161,6 @@
         document.getElementById('logout')?.addEventListener('click', async (e) => {
           e.preventDefault();
           await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' }).catch(()=>{});
-          // Conservamos carrito en BD; limpiamos LS
           localStorage.removeItem(`carrito_${usuario.username}`);
           localStorage.removeItem('usuario');
           window.location.href = 'index.html';
@@ -169,12 +176,12 @@
       }
     }
 
-    // ----- Sincroniza LS con carrito de BD (para sugerencias/badge) -----
+    // ----- Sincroniza LS con carrito de BD -----
     async function syncCartFromBackend(usuario) {
       try {
         const res = await fetch(`${API_BASE}/api/carrito/${usuario.id}`, { credentials:'include' });
         if (!res.ok) throw new Error('No se pudo obtener carrito');
-        const carrito = await res.json(); // [{producto_id,cantidad,nombre,precio,imagen}]
+        const carrito = await res.json();
         const normalized = carrito.map(p => ({
           id: Number(p.producto_id),
           nombre: String(p.nombre || ''),
@@ -188,26 +195,70 @@
       }
     }
 
-    // ----- Catálogo -----
-    async function cargarProductos(usuario) {
-      try {
-        const productos = await fetch(`${API_BASE}/api/catalogo`).then(r=>r.json());
-        const cont = document.getElementById('productos-listado');
-        cont.innerHTML = '';
+    // ----- Cargar y agrupar por categoría -----
+    async function cargarProductosAgrupados(usuario) {
+      const contRaiz = document.getElementById('productos-listado');
+      contRaiz.innerHTML = '';
 
-        productos.forEach(p => {
+      let productos = [];
+      try {
+        productos = await fetch(`${API_BASE}/api/catalogo`).then(r=>r.json());
+      } catch (err) {
+        console.error('Error cargando productos:', err);
+        contRaiz.innerHTML = '<p class="text-center w-100">Error cargando productos.</p>';
+        return;
+      }
+
+      // --- DEDUP: nos quedamos con el más nuevo por imagen (evita repetidos con precios distintos)
+      productos.sort((a,b) => (b.id||0) - (a.id||0));       // más nuevos primero
+      const vistos = new Set();
+      const únicos = [];
+      for (const p of productos) {
+        const key = String(p.imagen||'').toLowerCase();
+        if (vistos.has(key)) continue;
+        vistos.add(key);
+        únicos.push(p);
+      }
+      productos = únicos;
+
+      // Mapa de títulos por categoría
+      const labels = { blusas:'Camisetas', pantalones:'Pantalones', zapatos:'Zapatos' };
+
+      // Agrupa
+      const grupos = {};
+      for (const p of productos) {
+        const cat = (p.categoria || 'otros').toLowerCase();
+        if (!grupos[cat]) grupos[cat] = [];
+        grupos[cat].push(p);
+      }
+
+      // Render por grupo
+      Object.keys(grupos).forEach(cat => {
+        const titulo = labels[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
+
+        const h = document.createElement('h3');
+        h.className = 'mt-4 mb-3 cat-title';
+        h.textContent = titulo;
+        contRaiz.appendChild(h);
+
+        const fila = document.createElement('div');
+        fila.className = 'row';
+        contRaiz.appendChild(fila);
+
+        grupos[cat].forEach(p => {
+          const nombreBonito = p.descripcion ? String(p.descripcion) : String(p.nombre);
           const col = document.createElement('div');
           col.className = 'col-md-4 mb-4';
           col.innerHTML = `
             <div class="card h-100">
-              <img src="images/${p.imagen}" class="card-img-top" alt="${escapeHtml(p.nombre)}" />
+              <img src="images/${escapeHtml(p.imagen)}" class="card-img-top" alt="${escapeHtml(nombreBonito)}" />
               <div class="card-body d-flex flex-column">
-                <h5 class="card-title">${escapeHtml(p.nombre)}</h5>
+                <h5 class="card-title">${escapeHtml(nombreBonito)}</h5>
                 <p class="card-text">${money.format(Number(p.precio))}</p>
                 <button
                   class="btn btn-primary mt-auto agregar-carrito"
                   data-id="${p.id}"
-                  data-nombre="${escapeHtml(p.nombre)}"
+                  data-nombre="${escapeHtml(nombreBonito)}"
                   data-precio="${p.precio}"
                   data-imagen="${p.imagen}">
                   Agregar al carrito
@@ -215,26 +266,22 @@
               </div>
             </div>
           `;
-          cont.appendChild(col);
+          fila.appendChild(col);
         });
+      });
 
-        document.querySelectorAll('.agregar-carrito').forEach(btn => {
-          btn.addEventListener('click', (e) => agregarAlCarrito(e, usuario));
-        });
-
-      } catch (err) {
-        console.error('Error cargando productos:', err);
-        document.getElementById('productos-listado').innerHTML =
-          '<p class="text-center w-100">Error cargando productos.</p>';
-      }
+      // Bind de botones
+      document.querySelectorAll('.agregar-carrito').forEach(btn => {
+        btn.addEventListener('click', (e) => agregarAlCarrito(e, usuario));
+      });
     }
 
-    // ----- Agregar al carrito (delta = +1) -----
+    // ----- Agregar al carrito (+1) -----
     async function agregarAlCarrito(e, usuario) {
       const b = e.currentTarget;
       const id = Number(b.dataset.id);
       const nombre = b.dataset.nombre;
-      const precio = Number(b.dataset.precio);
+      const precio = Number(b.dataset.precio);   /* <- FIX: línea correcta */
       const imagen = b.dataset.imagen;
 
       let user = usuario;
@@ -294,4 +341,3 @@
   </script>
 </body>
 </html>
-
