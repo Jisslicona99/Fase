@@ -503,4 +503,122 @@ button {
   background: #000 !important;
 }
 
+/* ===== DRAKNOR — mejoras suaves (append al final) ===== */
+:root{
+  --accent: #03cafc;       /* color del tema (ya usado en tu template) */
+  --accent-dark: #0299c0;  /* tono un poco más oscuro para hover */
+  --ink: #070404;
+}
 
+/* Logo: tamaño, sombra sutil y micro-animación */
+.header .logo img{
+  max-height: 64px;
+  width: auto;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.20));
+  transition: transform .18s ease, filter .18s ease;
+}
+.header .logo img:hover{
+  transform: translateY(-1px) scale(1.03);
+  filter: drop-shadow(0 10px 22px rgba(0,0,0,.25));
+}
+
+/* Nav: realce del activo y subrayado animado al hover */
+.navigation.navbar-dark .navbar-nav .nav-link{
+  position: relative;
+  letter-spacing: .2px;
+  transition: color .15s ease;
+}
+.navigation.navbar-dark .navbar-nav .nav-item.active > .nav-link,
+.navigation.navbar-dark .navbar-nav .nav-link:hover{
+  color: var(--accent) !important;
+}
+.navigation.navbar-dark .navbar-nav .nav-link::after{
+  content:"";
+  position:absolute;
+  left:10px; right:10px; bottom:6px;
+  height:2px; background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .18s ease;
+}
+.navigation.navbar-dark .navbar-nav .nav-link:hover::after,
+.navigation.navbar-dark .navbar-nav .nav-item.active > .nav-link::after{
+  transform: scaleX(1);
+}
+
+/* Badge del carrito (span#contador-carrito) */
+#contador-carrito{
+  display:inline-block;
+  margin-left:.25rem;
+  padding:.05rem .45rem;
+  background: var(--accent);
+  color:#fff;
+  border-radius: 999px;
+  font-size:.85em;
+  line-height:1;
+  vertical-align: middle;
+}
+
+/* Botones: bordes redondeados + gradiente suave */
+.btn{ border-radius: 14px; }
+.btn:focus{ box-shadow: 0 0 0 .2rem rgba(3,202,252,.25); outline: 0; }
+
+.btn-primary{
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  border-color: var(--accent-dark);
+}
+.btn-primary:hover{
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+.btn-outline-light{
+  border-color:#fff; color:#fff;
+}
+.btn-outline-light:hover{
+  background:#fff; color:#000;
+}
+
+/* Iconos (font-awesome) un poco más “presentes” */
+.fa, .location_icon i{
+  color: var(--ink);
+  transition: transform .15s ease, color .15s ease;
+}
+.location_icon i{
+  color: var(--accent);
+}
+.location_icon li a:hover i,
+.fa:hover{
+  transform: translateY(-1px);
+  color: var(--accent-dark);
+}
+
+/* Tarjetas de productos: sombra y elevación ligera */
+.card, .product-box{
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.card:hover, .product-box:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,.10);
+}
+
+/* Navegación del carrusel (Owl) en el tema */
+.owl-theme .owl-nav [class*="owl-"]{
+  background: #fff !important;
+  border: 1px solid rgba(0,0,0,.08);
+  color: var(--ink) !important;
+  border-radius: 12px;
+  padding: 6px 10px !important;
+  transition: all .15s ease;
+}
+.owl-theme .owl-nav [class*="owl-"]:hover{
+  background: var(--accent) !important;
+  border-color: var(--accent);
+  color: #fff !important;
+}
+
+/* Loader contenedor sutil (no toca tu gif) */
+.loader_bg{
+  backdrop-filter: blur(1.5px);
+}

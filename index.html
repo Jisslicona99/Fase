@@ -21,6 +21,103 @@
         location.replace(location.href.replace('127.0.0.1', 'localhost'));
       }
     </script>
+
+    <!-- Fuentes para el título gótico -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+
+    <!-- ==== SOLO ESTILO (overrides no destructivos) ==== -->
+    <style>
+      :root { --accent:#2b7fff; }
+
+      /* Portada (reusa .banner_main existente) */
+      .banner_main{
+        position:relative;
+        min-height:68vh;
+        display:grid;
+        place-items:center;
+        color:#fff;
+        background:
+          radial-gradient(1200px 600px at 20% 10%, rgba(255,255,255,0.06), rgba(0,0,0,0)),
+          linear-gradient(160deg, #0f0f12 0%, #17181c 60%, #0f0f12 100%);
+        overflow:hidden;
+        padding:4.5rem 0;
+      }
+      .banner_main::before{
+        content:"";
+        position:absolute;
+        inset:0;
+        background:url("images/hero.jpg") center/cover no-repeat;
+        opacity:.25;             /* si no hay hero.jpg, solo se ve el degradado */
+        pointer-events:none;
+        filter:saturate(1.05) contrast(1.05);
+      }
+      .banner_main .container{ position:relative; z-index:1; }
+
+      .banner_main h1{
+        font-family:"UnifrakturCook","Cinzel",serif;
+        font-size:clamp(44px, 8vw, 104px);
+        line-height:.95;
+        letter-spacing:1px;
+        text-shadow:0 4px 22px rgba(0,0,0,.55);
+        margin-bottom:.25rem;
+      }
+      .banner_main p{
+        font-family:"Cinzel",serif;
+        font-weight:600;
+        font-size:clamp(15px, 2.2vw, 20px);
+        color:rgba(255,255,255,.9);
+        margin-bottom:1rem;
+      }
+      .banner_main .btn{
+        border-radius:12px;
+        padding:.7rem 1.2rem;
+        box-shadow:0 8px 22px rgba(0,0,0,.25);
+        transition:transform .15s ease, box-shadow .15s ease;
+      }
+      .banner_main .btn:hover{
+        transform:translateY(-2px);
+        box-shadow:0 12px 26px rgba(0,0,0,.32);
+      }
+      .btn-outline-light{ border-color:rgba(255,255,255,.75); color:#fff; }
+      .btn-outline-light:hover{ background:rgba(255,255,255,.12); border-color:#fff; color:#fff; }
+
+      /* Título de sección “Productos Destacados” */
+      .productos_destacados h2{
+        position:relative;
+        font-weight:800;
+        letter-spacing:.3px;
+      }
+      .productos_destacados h2::after{
+        content:"";
+        display:block;
+        width:72px;
+        height:4px;
+        margin:.6rem auto 0;
+        background:var(--accent);
+        border-radius:3px;
+      }
+
+      /* Tarjetas del carrusel (hover sutil) */
+      #carousel-productos .product-box{
+        border:1px solid #e9ecef !important; /* mantiene tu borde pero más limpio */
+        border-radius:14px;
+        background:#fff;
+        transition:transform .15s ease, box-shadow .15s ease;
+      }
+      #carousel-productos .product-box:hover{
+        transform:translateY(-2px);
+        box-shadow:0 10px 30px rgba(0,0,0,.12);
+      }
+      #carousel-productos img{ max-height:220px; object-fit:contain; }
+
+      /* Navegación activa (toque sutil) */
+      .navbar-nav .nav-link{ transition: color .15s ease; }
+      .navbar-nav .nav-item.active > .nav-link{ color: var(--accent) !important; }
+    </style>
+    <!-- ==== /solo estilo ==== -->
+
   </head>
 
   <body class="main-layout">
